@@ -36,6 +36,7 @@ import (
 func ValidateGameServer(gs *carrierv1alpha1.GameServer) field.ErrorList {
 	errs := validateName(gs.ObjectMeta)
 	errs = append(errs, validateSpec(&gs.Spec)...)
+	errs = append(errs, validateRestartPolicy(&gs.Spec.Template.Spec)...)
 	return append(errs, validatePodTemplate(corev1.PodTemplate{Template: gs.Spec.Template})...)
 }
 
@@ -163,6 +164,7 @@ func ValidateGameServerSet(gsSet *carrierv1alpha1.GameServerSet) field.ErrorList
 	errs := validateName(gsSet.ObjectMeta)
 	errs = append(errs, validateSpec(&gsSet.Spec.Template.Spec)...)
 	errs = append(errs, validateLabelsAndAnnotations(&gsSet.Spec.Template.ObjectMeta)...)
+	errs = append(errs, validateRestartPolicy(&gsSet.Spec.Template.Spec.Template.Spec)...)
 	return append(errs, validatePodTemplate(corev1.PodTemplate{ObjectMeta: gsSet.ObjectMeta,
 		Template: gsSet.Spec.Template.Spec.Template})...)
 }
@@ -172,6 +174,7 @@ func ValidateSquad(squad *carrierv1alpha1.Squad) field.ErrorList {
 	errs := validateName(squad.ObjectMeta)
 	errs = append(errs, validateSpec(&squad.Spec.Template.Spec)...)
 	errs = append(errs, validateLabelsAndAnnotations(&squad.Spec.Template.ObjectMeta)...)
+	errs = append(errs, validateRestartPolicy(&squad.Spec.Template.Spec.Template.Spec)...)
 	return append(errs, validatePodTemplate(corev1.PodTemplate{ObjectMeta: squad.ObjectMeta,
 		Template: squad.Spec.Template.Spec.Template})...)
 }
@@ -189,6 +192,18 @@ func ValidateSquadUpdate(oldSquad, newSquad *carrierv1alpha1.Squad) field.ErrorL
 		errs = append(errs, field.Forbidden(field.NewPath("spec.template.spec"),
 			"GameServer Spec are not allowed to changed, expect for image and resource"))
 	}
+
+	return errs
+}
+
+// validateRestartPolicy check if restart policy is not Set(Default always) or Always
+func validateRestartPolicy(podSpec *corev1.PodSpec) field.ErrorList {
+	var errs field.ErrorList
+	if podSpec.RestartPolicy == "" || podSpec.RestartPolicy == corev1.RestartPolicyAlways {
+		return nil
+	}
+	errs = append(errs, field.Forbidden(field.NewPath("spec.restartPolicy(PodSpec)"),
+		"can only be not set or Always"))
 
 	return errs
 }
