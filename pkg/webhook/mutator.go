@@ -86,7 +86,7 @@ func EnsureDefaultsForSquad(squad *v1alpha1.Squad) *v1alpha1.Squad {
 // sideCarExist checks if side car already exist
 func sideCarExist(pod *corev1.Pod) bool {
 	for _, container := range pod.Spec.Containers {
-		if container.Name == sdkserverSidecarName {
+		if container.Name == sdkServerSidecarName {
 			return true
 		}
 	}
@@ -103,7 +103,7 @@ func gameServerPod(pod *corev1.Pod) bool {
 // defaultSideCar return a simple sidecar caontainer
 func defaultSideCar(pod *corev1.Pod) *corev1.Container {
 	sideCar := corev1.Container{
-		Name:            sdkserverSidecarName,
+		Name:            sdkServerSidecarName,
 		ImagePullPolicy: corev1.PullIfNotPresent,
 	}
 	sideCar.VolumeMounts = buildSideCarVolumeMount(pod)
